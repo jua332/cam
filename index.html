@@ -2,80 +2,191 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Acceso a la Cámara Web</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cámara Web Avanzada</title>
     <style>
         body {
             font-family: sans-serif;
             text-align: center;
-            margin-top: 20px;
+            margin: 0;
+            padding-top: 20px;
             background-color: #f4f4f4;
         }
+        .container {
+            max-width: 680px;
+            margin: auto;
+        }
         #video {
-            /* Adaptación para pantallas de móvil */
-            max-width: 90%; 
+            display: block;
+            width: 100%;
             height: auto;
             border: 2px solid #333;
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
-        #message {
-            margin-top: 15px;
-            padding: 10px;
+        .controls {
+            margin: 20px 0;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 5px;
+            border: none;
             border-radius: 5px;
+        }
+        #snapButton {
+            background-color: #5cb85c;
+            color: white;
+        }
+        #flipButton {
+            background-color: #5bc0de;
+            color: white;
+        }
+        #downloadButton {
+            background-color: #0275d8;
+            color: white;
+            display: none; /* Oculto inicialmente */
+        }
+        #output {
+            margin-top: 30px;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            background-color: white;
+        }
+        #photo {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-top: 15px;
+        }
+        #message {
+            margin-bottom: 15px;
+            color: #d9534f;
+            font-weight: bold;
+        }
+        /* Ocultar el canvas y la imagen de salida al inicio */
+        #canvas, #photo {
+            display: none;
         }
     </style>
 </head>
 <body>
 
-    <h1>Visualizador de Cámara Web</h1>
-    
-    <video id="video" width="640" height="480" autoplay playsinline></video>
-    
-    <p id="message"></p>
+    <div class="container">
+        <h1>Cámara Web</h1>
+        <p id="message">Cargando cámara...</p>
+        
+        <video id="video" autoplay playsinline></video>
+        <canvas id="canvas"></canvas>
+
+        <div class="controls">
+            <button id="snapButton">📷 Tomar Foto</button>
+            <button id="flipButton" style="display: none;">🔄 Cambiar Cámara</button>
+        </div>
+
+        <div id="output">
+            <h2>Última Captura</h2>
+            <img id="photo" alt="Foto Capturada">
+            <a id="downloadButton" download="foto_webcam.png">Descargar Foto</a>
+        </div>
+    </div>
 
     <script>
         const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const photo = document.getElementById('photo');
+        const snapButton = document.getElementById('snapButton');
+        const flipButton = document.getElementById('flipButton');
+        const downloadButton = document.getElementById('downloadButton');
         const message = document.getElementById('message');
 
-        // Configuración para que el navegador sepa que solo queremos el video
-        const constraints = {
-            video: true,
-            audio: false 
-        };
+        let currentStream = null;
+        let facingMode = 'user'; // 'user' (frontal) o 'environment' (trasera)
 
-        function startCamera() {
-            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        // 1. FUNCIÓN PARA INICIAR O CAMBIAR LA CÁMARA
+        async function startCamera(mode) {
+            message.textContent = "Solicitando cámara...";
+
+            // Si hay un stream activo, lo detenemos para poder cambiar de cámara
+            if (currentStream) {
+                currentStream.getTracks().forEach(track => track.stop());
+            }
+
+            const constraints = {
+                video: {
+                    facingMode: mode,
+                    width: { ideal: 1280 }, // Calidad de video ideal
+                    height: { ideal: 720 }
+                },
+                audio: false 
+            };
+
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                currentStream = stream;
+                video.srcObject = stream;
+                video.play();
+                message.textContent = "Cámara activa. ¡Lista para usar!";
+                message.style.color = "#3c763d";
                 
-                navigator.mediaDevices.getUserMedia(constraints)
-                    .then(function(stream) {
-                        video.srcObject = stream;
-                        video.play();
-                        message.textContent = "Cámara abierta correctamente. ¡Hola! 👋";
-                        message.style.backgroundColor = "#dff0d8"; // Fondo verde claro
-                        message.style.color = "#3c763d"; // Texto verde oscuro
-                    })
-                    .catch(function(err) {
-                        // Mensajes de error específicos
-                        let errorMsg = "Error al iniciar la cámara.";
-                        if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-                            errorMsg = "Error: Debes autorizar el acceso a la cámara en la configuración de tu navegador o del sistema operativo.";
-                        } else if (err.name === 'NotFoundError') {
-                            errorMsg = "Error: No se encontró ninguna cámara disponible en el dispositivo.";
-                        }
-                        
-                        message.textContent = errorMsg;
-                        message.style.backgroundColor = "#f2dede"; // Fondo rojo claro
-                        message.style.color = "#a94442"; // Texto rojo oscuro
-                        console.error("Error al acceder a la cámara:", err);
-                    });
-            } else {
-                message.textContent = "Lo siento, tu navegador no soporta el acceso a la cámara web.";
-                message.style.backgroundColor = "#fcf8e3"; // Fondo amarillo claro
-                message.style.color = "#8a6d3b"; // Texto amarillo oscuro
+                // Mostrar el botón de voltear solo si hay más de una cámara (móviles)
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const videoInputs = devices.filter(device => device.kind === 'videoinput');
+                if (videoInputs.length > 1) {
+                    flipButton.style.display = 'inline-block';
+                }
+
+            } catch (err) {
+                message.textContent = "Error: Asegúrate de usar HTTPS y otorgar permiso. Detalle: " + err.name;
+                message.style.color = "#d9534f";
+                console.error("Error al acceder a la cámara:", err);
             }
         }
 
-        startCamera();
+        // 2. FUNCIÓN PARA TOMAR LA FOTO
+        function takePicture() {
+            if (!currentStream) {
+                message.textContent = "La cámara no está activa.";
+                return;
+            }
+
+            // Asegurarse de que el canvas tenga el mismo tamaño que el video actual
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+
+            // Dibuja el frame actual del video en el canvas
+            const context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // Convierte la imagen del canvas a una URL de datos PNG
+            const dataURL = canvas.toDataURL('image/png');
+
+            // Muestra la imagen capturada
+            photo.setAttribute('src', dataURL);
+            photo.style.display = 'block';
+
+            // Configura el botón de descarga
+            downloadButton.setAttribute('href', dataURL);
+            downloadButton.style.display = 'inline-block';
+            
+            message.textContent = "¡Foto capturada! Puedes descargarla.";
+        }
+
+        // 3. FUNCIÓN PARA VOLTEAR LA CÁMARA (FRONTAL/TRASERA)
+        function flipCamera() {
+            facingMode = (facingMode === 'user') ? 'environment' : 'user';
+            startCamera(facingMode);
+        }
+
+        // 4. EVENT LISTENERS
+        snapButton.addEventListener('click', takePicture);
+        flipButton.addEventListener('click', flipCamera);
+        
+        // Iniciar la cámara por defecto (frontal)
+        startCamera(facingMode);
     </script>
 
 </body>
