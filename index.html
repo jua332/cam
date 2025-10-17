@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Cámara Web Nativa - CORREGIDA</title>
+    <title>Cámara Web Simplificada</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
@@ -31,7 +31,7 @@
 
         /* ÁREA DE VIDEO: Ocupa el espacio restante */
         .video-wrapper {
-            flex-grow: 1; /* Ocupa todo el espacio disponible */
+            flex-grow: 1;
             width: 100%;
             position: relative;
             display: flex;
@@ -45,7 +45,7 @@
             min-height: 100%;
             width: auto;
             height: auto;
-            object-fit: cover; /* Cambiado a 'cover' para llenar el espacio */
+            object-fit: cover; /* Llena el espacio */
         }
         
         /* BARRA SUPERIOR */
@@ -58,39 +58,51 @@
             padding: 8px 15px;
             box-sizing: border-box;
             display: flex;
-            justify-content: space-between;
+            justify-content: center; /* Centrar mensaje */
             align-items: center;
             z-index: 10;
         }
         #message {
-            font-size: 0.9em; margin: 0; color: #fff;
+            font-size: 0.9em; margin: 0;
         }
         .msg-success { color: #8bc34a; }
         .msg-error { color: #ef5350; }
         .msg-info { color: #64b5f6; }
 
-        /* CONTROLES INFERIORES */
+        /* CONTROLES INFERIORES: Más centrados y limpios */
         .bottom-controls {
-            flex-shrink: 0; /* Asegura que la barra no se encoja */
+            flex-shrink: 0;
             width: 100%;
             background: rgba(0, 0, 0, 0.7);
             padding: 15px 0;
             box-sizing: border-box;
             display: flex;
-            justify-content: space-around;
+            justify-content: center; /* Centrar todos los elementos */
             align-items: center;
-            z-index: 100; /* Asegura que estén siempre encima */
+            z-index: 100;
         }
         .control-button {
             background: none; border: none; color: white; font-size: 1.2em; cursor: pointer; padding: 10px; transition: color 0.3s ease;
         }
+        
+        /* Botón de Captura Central */
         #snapButton {
-            width: 70px; height: 70px; border-radius: 50%; background-color: #fff; border: 5px solid rgba(255, 255, 255, 0.5); display: flex; align-items: center; justify-content: center; margin: 0 20px; box-shadow: 0 0 15px rgba(255, 255, 255, 0.3); transition: transform 0.2s ease;
+            width: 70px; height: 70px; border-radius: 50%; background-color: #fff; border: 5px solid rgba(255, 255, 255, 0.5); display: flex; align-items: center; justify-content: center; margin: 0 40px; /* Margen para separarlo del botón de volteo */ box-shadow: 0 0 15px rgba(255, 255, 255, 0.3); transition: transform 0.2s ease;
+        }
+        #snapButton:active {
+             transform: scale(0.95);
         }
         #snapButton i {
             color: #dc3545; font-size: 1.5em;
         }
-
+        
+        /* Botón de Volteo a la Derecha */
+        #flipButton {
+             margin-right: 0; /* Asegura que se pegue al borde derecho visualmente */
+             font-size: 1.5em;
+             color: #ccc;
+        }
+        
         /* VISTA PREVIA FLOTANTE */
         #output-preview {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.95); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 200;
@@ -110,7 +122,6 @@
         /* CLASES AUXILIARES */
         #canvas { display: none; }
         #video.mirrored { transform: scaleX(-1); }
-        .top-icon { font-size: 1.2em; color: #fff; margin: 0 5px; }
     </style>
 </head>
 <body>
@@ -119,10 +130,6 @@
         
         <div id="top-bar">
             <span id="message" class="msg-info">Iniciando...</span>
-            <div>
-                <i class="fas fa-flash top-icon"></i> 
-                <i class="fas fa-cog top-icon"></i>
-            </div>
         </div>
 
         <div class="video-wrapper">
@@ -131,8 +138,10 @@
         </div>
         
         <div class="bottom-controls">
-            <button id="galleryButton" class="control-button"><i class="fas fa-image"></i></button>
+            <div style="width: 70px; height: 70px;"></div> 
+            
             <button id="snapButton"><i class="fas fa-camera"></i></button>
+            
             <button id="flipButton" class="control-button" style="display: none;"><i class="fas fa-sync-alt"></i></button>
         </div>
     </div>
@@ -254,7 +263,7 @@
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
-            outputPreview.style.display = 'none'; // Cierra la vista previa tras descargar
+            outputPreview.style.display = 'none';
             updateMessage(`Cámara ${facingMode === 'user' ? 'Frontal' : 'Trasera'} activa.`, 'success');
         });
 
