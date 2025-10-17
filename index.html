@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Cámara Web Simplificada</title>
+    <title>Cámara Web App</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
@@ -21,12 +21,14 @@
             height: 100vh;
         }
 
-        /* CONTENEDOR PRINCIPAL: Flex para separar video y controles */
+        /* CONTENEDOR PRINCIPAL: Incluye padding para que los controles fijos no tapen el video */
         .camera-app-container {
             flex-grow: 1; 
             display: flex;
             flex-direction: column;
             position: relative;
+            /* ESPACIO PARA LOS CONTROLES FIJOS INFERIORES (aprox 100px) */
+            padding-bottom: 100px; 
         }
 
         /* ÁREA DE VIDEO: Ocupa el espacio restante */
@@ -58,7 +60,7 @@
             padding: 8px 15px;
             box-sizing: border-box;
             display: flex;
-            justify-content: center; /* Centrar mensaje */
+            justify-content: center;
             align-items: center;
             z-index: 10;
         }
@@ -69,15 +71,19 @@
         .msg-error { color: #ef5350; }
         .msg-info { color: #64b5f6; }
 
-        /* CONTROLES INFERIORES: Más centrados y limpios */
+        /* CONTROLES INFERIORES: CLAVE - Usar position: fixed */
         .bottom-controls {
-            flex-shrink: 0;
+            position: fixed; /* Lo hace fijo en la pantalla */
+            bottom: 0;      /* Lo ancla al fondo de la ventana */
+            left: 0;        /* Lo extiende a la izquierda */
+            right: 0;       /* Lo extiende a la derecha */
+            
             width: 100%;
             background: rgba(0, 0, 0, 0.7);
             padding: 15px 0;
             box-sizing: border-box;
             display: flex;
-            justify-content: center; /* Centrar todos los elementos */
+            justify-content: space-around; /* Distribuir controles */
             align-items: center;
             z-index: 100;
         }
@@ -87,7 +93,7 @@
         
         /* Botón de Captura Central */
         #snapButton {
-            width: 70px; height: 70px; border-radius: 50%; background-color: #fff; border: 5px solid rgba(255, 255, 255, 0.5); display: flex; align-items: center; justify-content: center; margin: 0 40px; /* Margen para separarlo del botón de volteo */ box-shadow: 0 0 15px rgba(255, 255, 255, 0.3); transition: transform 0.2s ease;
+            width: 70px; height: 70px; border-radius: 50%; background-color: #fff; border: 5px solid rgba(255, 255, 255, 0.5); display: flex; align-items: center; justify-content: center; margin: 0; box-shadow: 0 0 15px rgba(255, 255, 255, 0.3); transition: transform 0.2s ease;
         }
         #snapButton:active {
              transform: scale(0.95);
@@ -96,9 +102,8 @@
             color: #dc3545; font-size: 1.5em;
         }
         
-        /* Botón de Volteo a la Derecha */
+        /* Botón de Volteo */
         #flipButton {
-             margin-right: 0; /* Asegura que se pegue al borde derecho visualmente */
              font-size: 1.5em;
              color: #ccc;
         }
@@ -122,6 +127,9 @@
         /* CLASES AUXILIARES */
         #canvas { display: none; }
         #video.mirrored { transform: scaleX(-1); }
+        .dummy-control { /* Usado para centrar SnapButton */
+            width: 50px; /* Tamaño similar al botón de volteo */
+        }
     </style>
 </head>
 <body>
@@ -138,11 +146,11 @@
         </div>
         
         <div class="bottom-controls">
-            <div style="width: 70px; height: 70px;"></div> 
-            
-            <button id="snapButton"><i class="fas fa-camera"></i></button>
-            
             <button id="flipButton" class="control-button" style="display: none;"><i class="fas fa-sync-alt"></i></button>
+
+            <button id="snapButton"><i class="fas fa-camera"></i></button>
+
+            <div class="dummy-control"></div>
         </div>
     </div>
 
@@ -164,6 +172,7 @@
         const closePreviewButton = document.getElementById('closePreviewButton');
         const message = document.getElementById('message');
         const outputPreview = document.getElementById('output-preview');
+        const dummyControl = document.querySelector('.dummy-control'); // Nuevo elemento de relleno
 
         let currentStream = null;
         let facingMode = 'user';
@@ -205,7 +214,10 @@
                 const devices = await navigator.mediaDevices.enumerateDevices();
                 const videoInputs = devices.filter(device => device.kind === 'videoinput');
                 hasMultipleCameras = videoInputs.length > 1;
+
+                // Mostrar/Ocultar el botón de volteo y el elemento de relleno para centrar
                 flipButton.style.display = hasMultipleCameras ? 'inline-block' : 'none';
+                dummyControl.style.display = hasMultipleCameras ? 'none' : 'block';
 
             } catch (err) {
                 updateMessage("Error: No se pudo iniciar. Recuerda usar HTTPS y dar permisos. Detalle: " + err.name, 'error');
@@ -275,6 +287,5 @@
         // Iniciar al cargar
         startCamera(facingMode);
     </script>
-
 </body>
 </html>
