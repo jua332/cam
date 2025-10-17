@@ -40,6 +40,7 @@
             align-items: center;
             justify-content: center;
             overflow: hidden;
+            z-index: 5; /* Prioridad de capa baja */
         }
         #video {
             display: block;
@@ -71,21 +72,21 @@
         .msg-error { color: #ef5350; }
         .msg-info { color: #64b5f6; }
 
-        /* CONTROLES INFERIORES: CLAVE - Usar position: fixed */
+        /* CONTROLES INFERIORES: CLAVE - Usar position: fixed y z-index ALTO */
         .bottom-controls {
             position: fixed; /* Lo hace fijo en la pantalla */
             bottom: 0;      /* Lo ancla al fondo de la ventana */
-            left: 0;        /* Lo extiende a la izquierda */
-            right: 0;       /* Lo extiende a la derecha */
+            left: 0;        
+            right: 0;       
             
             width: 100%;
             background: rgba(0, 0, 0, 0.7);
             padding: 15px 0;
             box-sizing: border-box;
             display: flex;
-            justify-content: space-around; /* Distribuir controles */
+            justify-content: space-around; 
             align-items: center;
-            z-index: 100;
+            z-index: 1000; /* PRIORIDAD MÁXIMA para que se pueda hacer clic */
         }
         .control-button {
             background: none; border: none; color: white; font-size: 1.2em; cursor: pointer; padding: 10px; transition: color 0.3s ease;
@@ -110,7 +111,7 @@
         
         /* VISTA PREVIA FLOTANTE */
         #output-preview {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.95); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 200;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.95); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 2000; /* MÁS ALTO AÚN */
         }
         #output-preview img {
             max-width: 90%; max-height: 80vh; object-fit: contain; border-radius: 8px; box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
@@ -127,7 +128,7 @@
         /* CLASES AUXILIARES */
         #canvas { display: none; }
         #video.mirrored { transform: scaleX(-1); }
-        .dummy-control { /* Usado para centrar SnapButton */
+        .dummy-control { 
             width: 50px; /* Tamaño similar al botón de volteo */
         }
     </style>
